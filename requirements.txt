@@ -1,0 +1,11 @@
+bson
+Flask
+Flask-Compress
+Flask-Cors
+Flask-RESTful
+flask-restplus
+gunicorn
+pytest
+pytest-cov
+pytest-html
+

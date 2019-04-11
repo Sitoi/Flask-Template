@@ -1,0 +1,16 @@
+version: "3"
+
+services:
+
+  flask-template:
+    build:
+      context: .
+    container_name: flask-template
+    image: docker.io/sitoi/flask-template:latest
+    restart: always
+    environment:
+      - Author = Shi Tao
+      - Area = Shanghai
+      - Birthday = 1997-04-18 05:20:00
+    ports:
+      - 8000:8000

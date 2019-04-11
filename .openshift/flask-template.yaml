@@ -1,0 +1,78 @@
+---
+kind: DeploymentConfig
+apiVersion: apps.openshift.io/v1
+metadata:
+  name: flask-template
+  labels:
+    app: flask-template
+spec:
+  template:
+    metadata:
+      labels:
+        app: flask-template
+    spec:
+      hostname: flask-template
+      containers:
+        - name: flask-template
+          image: docker.io/sitoi/flask-template:latest
+          env:
+            - name: Author
+              value: Shi Tao
+            - name: Area
+              value: Shanghai
+            - name: Birthday
+              value: 1997-04-18 05:20:00
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: 100m
+              memory: 200Mi
+            limits:
+              cpu: 400m
+              memory: 1024Mi
+          livenessProbe:
+            httpGet:
+              path: "/"
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 60
+  replicas: 2
+  strategy:
+    type: Rolling
+  paused: false
+  revisionHistoryLimit: 2
+  minReadySeconds: 0
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: flask-template
+  name: flask-template
+spec:
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 8000
+  selector:
+    app: flask-template
+
+---
+kind: Route
+apiVersion: v1
+metadata:
+  labels:
+    app: flask-template
+  name: flask-template
+spec:
+  host: flask.sitoi.cn
+  path: "/"
+  port:
+    targetPort: http
+  to:
+    kind: Service
+    name: flask-template
+    weight: 100
+  wildcardPolicy: None

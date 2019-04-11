@@ -1,0 +1,130 @@
+---
+kind: Template
+apiVersion: v1
+metadata:
+  name: flask-template
+  annotations:
+    openshift.io/display-name: Flask 项目模板
+    description: Flask 项目模板
+    iconClass: icon-hadoop
+    tags: Flask,template
+    openshift.io/provider-display-name: Sitoi
+    openshift.io/documentation-url: http://www.sitoi.cn
+    openshift.io/support-url: https://github.com/Sitoi/Flask-Template
+parameters:
+  - name: IMAGE_NAME
+    displayName: 镜像地址
+    description: 镜像地址
+    value: docker.io/sitoi/flask-template
+    required: true
+  - name: IMAGE_VERSION
+    displayName: 镜像版本
+    description: 镜像版本
+    value: latest
+    required: true
+  - name: SERVICE_NAME
+    displayName: 服务名称
+    description: 部署服务名称
+    value: flask-template
+    required: true
+  - name: ROUTE_HOST
+    displayName: 主机
+    description: 访问主机
+    value: flask.sitoi.cn
+    required: true
+  - name: ROUTE_PATH
+    displayName: 路由
+    description: 代理路由
+    value: "/"
+    required: true
+  - name: Author
+    displayName: 作者
+    description: 作者
+    value: Shi Tao
+    required: true
+  - name: Area
+    displayName: 坐标
+    description: 坐标
+    value: Shanghai
+    required: true
+  - name: Birthday
+    displayName: 生日
+    description: 生日
+    value: 1997-04-18 05:20:00
+    required: true
+message: 访问 http://${ROUTE_HOST}${ROUTE_PATH} 查看项目
+objects:
+  - kind: DeploymentConfig
+    apiVersion: apps.openshift.io/v1
+    metadata:
+      name: "${SERVICE_NAME}"
+      labels:
+        app: "${SERVICE_NAME}"
+    spec:
+      template:
+        metadata:
+          labels:
+            app: "${SERVICE_NAME}"
+        spec:
+          hostname: "${SERVICE_NAME}"
+          containers:
+            - name: "${SERVICE_NAME}"
+              image: "${IMAGE_NAME}:${IMAGE_VERSION}"
+              env:
+                - name: Author
+                  value: "${Author}"
+                - name: Area
+                  value: "${Area}"
+                - name: Birthday
+                  value: "${Birthday}"
+              ports:
+                - containerPort: 8000
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 200Mi
+                limits:
+                  cpu: 400m
+                  memory: 1024Mi
+              livenessProbe:
+                httpGet:
+                  path: "/"
+                  port: 8000
+                initialDelaySeconds: 30
+                periodSeconds: 60
+      replicas: 2
+      strategy:
+        type: Rolling
+      paused: false
+      revisionHistoryLimit: 2
+      minReadySeconds: 0
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      labels:
+        app: "${SERVICE_NAME}"
+      name: "${SERVICE_NAME}"
+    spec:
+      ports:
+        - name: http
+          port: 80
+          protocol: TCP
+          targetPort: 8000
+      selector:
+        app: "${SERVICE_NAME}"
+  - kind: Route
+    apiVersion: v1
+    metadata:
+      labels:
+        app: "${SERVICE_NAME}"
+      name: "${SERVICE_NAME}"
+    spec:
+      host: "${ROUTE_HOST}"
+      path: "${ROUTE_PATH}"
+      port:
+        targetPort: http
+      to:
+        kind: Service
+        name: "${SERVICE_NAME}"
+        weight: 100
+      wildcardPolicy: None
